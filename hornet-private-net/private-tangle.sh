@@ -41,13 +41,13 @@ clean () {
 
   if [ -d ./db/private-tangle ]; then
     cd ./db/private-tangle
-    removeSubfolderContent "coo.db" "node1.db" "spammer.db" "node-autopeering.db"
+    removeSubfolderContent "coo.db" "node1.db" "node2.db" "spammer1.db" "spammer2.db" "node-autopeering.db"
     cd ../..
   fi
 
   if [ -d ./p2pstore ]; then
     cd ./p2pstore
-    removeSubfolderContent coo node1 spammer "node-autopeering"
+    removeSubfolderContent coo node1 node2 spammer1 spammer2 "node-autopeering"
     cd ..
   fi
 
@@ -56,8 +56,10 @@ clean () {
   fi
 
   # We need to do this so that initially the permissions are user's permissions
-  resetPeeringFile config/peering-node.json
-  resetPeeringFile config/peering-spammer.json
+  resetPeeringFile config/peering-node1.json
+  resetPeeringFile config/peering-spammer1.json
+  resetPeeringFile config/peering-node2.json
+  resetPeeringFile config/peering-spammer2.json
 }
 
 # Sets up the necessary directories if they do not exist yet
@@ -72,7 +74,7 @@ volumeSetup () {
   fi
 
   cd ./db/private-tangle
-  createSubfolders coo.db spammer.db node1.db node-autopeering.db
+  createSubfolders coo.db spammer1.db spammer2.db node1.db node2.db node-autopeering.db
   cd ../..
 
   # Snapshots
@@ -90,7 +92,7 @@ volumeSetup () {
   fi
 
   cd ./p2pstore
-  createSubfolders coo spammer node1 node-autopeering
+  createSubfolders coo spammer1 spammer2 node1 node2 node-autopeering
   cd ..
 
   ## Change permissions so that the Tangle data can be written (hornet user)
@@ -114,6 +116,7 @@ installTangle () {
   # Ensure the script does not stop if it has not been pruned
   set +e
   docker network create "private-tangle"
+  # docker network create --driver overlay "tangle1"
   set -e
 
   # When we install we ensure container images are updated
@@ -146,10 +149,16 @@ startContainers () {
   docker-compose --log-level ERROR up -d coo
 
   # Run the spammer
-  docker-compose --log-level ERROR up -d spammer
+  docker-compose --log-level ERROR up -d spammer1
+
+  # Run the spammer
+  docker-compose --log-level ERROR up -d spammer2
 
   # Run a regular node 
-  docker-compose --log-level ERROR up -d node
+  docker-compose --log-level ERROR up -d node1
+
+    # Run a regular node 
+  docker-compose --log-level ERROR up -d node2
 }
 
 updateContainers () {
@@ -179,7 +188,7 @@ updateTangle () {
 generateSnapshot () {
   echo "Generating an initial snapshot..."
     # First a key pair is generated
-  docker-compose run --rm node hornet tool ed25519-key > key-pair.txt
+  docker-compose run --rm node1 hornet tool ed25519-key > key-pair.txt
 
   # Extract the public key use to generate the address
   local public_key="$(getPublicKey key-pair.txt)"
@@ -190,7 +199,7 @@ generateSnapshot () {
 
   # Generate the snapshot
   cd snapshots/private-tangle
-  docker-compose run --rm -v "$PWD:/output_dir" node hornet tool snap-gen "private-tangle"\
+  docker-compose run --rm -v "$PWD:/output_dir" node1 hornet tool snap-gen "private-tangle"\
    "$(cat ../../address.txt)" 1000000000 /output_dir/full_snapshot.bin
 
   echo "Initial Ed25519 Address generated. You can find the keys at key-pair.txt and the address at address.txt"
@@ -212,8 +221,10 @@ setupCoordinator () {
   echo "$coo_public_key" > coo-milestones-public-key.txt
 
   setCooPublicKey "$coo_public_key" config/config-coo.json
-  setCooPublicKey "$coo_public_key" config/config-node.json
-  setCooPublicKey "$coo_public_key" config/config-spammer.json
+  setCooPublicKey "$coo_public_key" config/config-node1.json
+  setCooPublicKey "$coo_public_key" config/config-node2.json
+  setCooPublicKey "$coo_public_key" config/config-spammer1.json
+  setCooPublicKey "$coo_public_key" config/config-spammer2.json
 
   bootstrapCoordinator
 }
@@ -238,7 +249,7 @@ bootstrapCoordinator () {
   sleep $bootstrap_tick
   docker logs $(cat ./coo.bootstrap.container) 2>&1 | grep "milestone issued (1)"
   bootstrapped=$?
-    
+
   if [ $bootstrapped -eq 0 ]; then
     echo "Coordinator bootstrapped!"
     docker kill -s SIGINT $(cat ./coo.bootstrap.container)
@@ -255,9 +266,11 @@ bootstrapCoordinator () {
 
 # Generates the P2P identities of the Nodes
 generateP2PIdentities () {
-  generateP2PIdentity node node1.identity.txt
+  generateP2PIdentity node1 node1.identity.txt
+  generateP2PIdentity node2 node2.identity.txt
   generateP2PIdentity coo coo.identity.txt
-  generateP2PIdentity spammer spammer.identity.txt
+  generateP2PIdentity spammer1 spammer1.identity.txt
+  generateP2PIdentity spammer2 spammer2.identity.txt
 
   # Identity of the autopeering node
   generateP2PIdentity node-autopeering node-autopeering.identity.txt
@@ -271,7 +284,80 @@ setupIdentities () {
 }
 
 # Sets up the identity of the peers
-setupPeerIdentity () {
+setupPeerIdentity9Args () {
+  local peerName1="$1"
+  local peerID1="$2"
+
+  local peerName2="$3"
+  local peerID2="$4"
+
+  local peerName3="$5"
+  local peerID3="$6"
+
+  local peerName4="$7"
+  local peerID4="$8"
+
+  local peer_conf_file="$9"
+
+  cat <<EOF > "$peer_conf_file"
+  {
+    "peers": [
+      {
+        "alias": "$peerName1",
+        "multiAddress": "/dns/$peerName1/tcp/15600/p2p/$peerID1"
+      },
+      {
+        "alias": "$peerName2",
+        "multiAddress": "/dns/$peerName2/tcp/15600/p2p/$peerID2"
+      },
+      {
+        "alias": "$peerName3",
+        "multiAddress": "/dns/$peerName3/tcp/15600/p2p/$peerID3"
+      },
+      {
+        "alias": "$peerName4",
+        "multiAddress": "/dns/$peerName4/tcp/15600/p2p/$peerID4"
+      }
+    ]
+  } 
+EOF
+
+}
+
+setupPeerIdentity7Args () {
+  local peerName1="$1"
+  local peerID1="$2"
+
+  local peerName2="$3"
+  local peerID2="$4"
+
+  local peerName3="$5"
+  local peerID3="$6"
+
+  local peer_conf_file="$7"
+
+  cat <<EOF > "$peer_conf_file"
+  {
+    "peers": [
+      {
+        "alias": "$peerName1",
+        "multiAddress": "/dns/$peerName1/tcp/15600/p2p/$peerID1"
+      },
+      {
+        "alias": "$peerName2",
+        "multiAddress": "/dns/$peerName2/tcp/15600/p2p/$peerID2"
+      },
+      {
+        "alias": "$peerName3",
+        "multiAddress": "/dns/$peerName3/tcp/15600/p2p/$peerID3"
+      }
+    ]
+  } 
+EOF
+
+}
+
+setupPeerIdentity5Args () {
   local peerName1="$1"
   local peerID1="$2"
 
@@ -297,22 +383,48 @@ EOF
 
 }
 
+setupPeerIdentity3Args () {
+  local peerName1="$1"
+  local peerID1="$2"
+
+  local peer_conf_file="$3"
+
+  cat <<EOF > "$peer_conf_file"
+  {
+    "peers": [
+      {
+        "alias": "$peerName1",
+        "multiAddress": "/dns/$peerName1/tcp/15600/p2p/$peerID1"
+      }
+    ]
+  } 
+EOF
+
+}
+
 ### 
 ### Sets the peering configuration
 ### 
 setupPeering () {
   local node1_peerID=$(getPeerID node1.identity.txt)
+  local node2_peerID=$(getPeerID node2.identity.txt)
   local coo_peerID=$(getPeerID coo.identity.txt)
-  local spammer_peerID=$(getPeerID spammer.identity.txt)
+  local spammer1_peerID=$(getPeerID spammer1.identity.txt)
+  local spammer2_peerID=$(getPeerID spammer2.identity.txt)
 
-  setupPeerIdentity "node1" "$node1_peerID" "spammer" "$spammer_peerID" config/peering-coo.json
-  setupPeerIdentity "node1" "$node1_peerID" "coo" "$coo_peerID" config/peering-spammer.json
-  setupPeerIdentity "coo" "$coo_peerID" "spammer" "$spammer_peerID" config/peering-node.json
+  setupPeerIdentity5Args "node1" "$node1_peerID"  "spammer1" "$spammer1_peerID" config/peering-coo.json
+
+  setupPeerIdentity5Args "node1" "$node1_peerID" "coo" "$coo_peerID" config/peering-spammer1.json
+  setupPeerIdentity3Args "node2" "$node2_peerID" config/peering-spammer2.json
+  setupPeerIdentity7Args "coo" "$coo_peerID" "spammer1" "$spammer1_peerID" "node2" "$node2_peerID" config/peering-node1.json
+  setupPeerIdentity5Args  "spammer2" "$spammer2_peerID" "node1" "$node1_peerID" config/peering-node2.json
 
   # We need this so that the peering can be properly updated
   if ! [[ "$OSTYPE" == "darwin"* ]]; then
-    sudo chown 65532:65532 config/peering-node.json
-    sudo chown 65532:65532 config/peering-spammer.json
+    sudo chown 65532:65532 config/peering-node1.json
+    sudo chown 65532:65532 config/peering-node2.json
+    sudo chown 65532:65532 config/peering-spammer1.json
+    sudo chown 65532:65532 config/peering-spammer2.json
   fi
 }
 
@@ -323,8 +435,10 @@ setupAutopeering () {
   local entry_peerID=$(getAutopeeringID node-autopeering.identity.txt)
   local multiaddr="\/dns\/node-autopeering\/udp\/14626\/autopeering\/$entry_peerID"
 
-  setEntryNode $multiaddr config/config-node.json
-  setEntryNode $multiaddr config/config-spammer.json
+  # setEntryNode $multiaddr config/config-node1.json
+  # setEntryNode $multiaddr config/config-spammer1.json
+  # setEntryNode $multiaddr config/config-node2.json
+  # setEntryNode $multiaddr config/config-spammer2.json
 }
 
 startAutopeering () {

@@ -38,6 +38,7 @@
         }
     },
     "dashboard": {
+        "bindAddress": "0.0.0.0:8081",
         "auth": {
             "sessionTimeout": "72h",
             "username": "admin",
@@ -54,7 +55,7 @@
         "depth": 50,
         "interval": 200,
         "fullPath": "snapshots/private-tangle/full_snapshot.bin",
-        "deltaPath": "snapshots/private-tangle/delta_snapshot_spammer.bin",
+        "deltaPath": "snapshots/private-tangle/delta_snapshot.bin",
         "deltaSizeThresholdPercentage": 50.0
     },
     "protocol": {
@@ -64,7 +65,7 @@
         "milestonePublicKeyCount": 1,
         "publicKeyRanges": [
             {
-                "key": "678db435e9ee1f122dae939e8cf07c7657a93aeac395220fdf6e1c38db9b0d06",
+                "key": "a2610e7bfdee2719ede8cf77fdfc41610b31d7cdda226c3109cee7ee25fdc1ed",
                 "start": 0,
                 "end": 0
             }
@@ -81,9 +82,9 @@
         "milestoneTimeout": "120s"
     },
     "tipsel": {
-        "maxDeltaMsgYoungestConeRootIndexToCMI": 8,
-        "maxDeltaMsgOldestConeRootIndexToCMI": 13,
-        "belowMaxDepth": 15,
+        "maxDeltaMsgYoungestConeRootIndexToCMI": 10,
+        "maxDeltaMsgOldestConeRootIndexToCMI": 10,
+        "belowMaxDepth": 10,
         "nonLazy": {
             "retentionRulesTipsLimit": 100,
             "maxReferencedTipAge": "3s",
@@ -98,31 +99,22 @@
         }
     },
     "node": {
-        "alias": "spammer",
+        "alias": "node2",
         "profile": "auto",
         "disablePlugins": [
             "WarpSync",
-            "Coordinator",
             "Profiling",
             "Prometheus",
-            "MQTT",
+            "Spammer",
+            "Coordinator",
             "ZMQ"
         ],
         "enablePlugins": [
-            "Spammer",
             "URTS",
             "RestAPI",
+            "MQTT",
             "Autopeering"
         ]
-    },
-    "spammer": {
-        "message": "one-click-tangle.",
-        "index": "HORNET Spammer",
-        "indexSemiLazy": "HORNET Spammer Semi-Lazy",
-        "cpuMaxUsage": 0.8,
-        "mpsRateLimit": 5.0,
-        "workers": 0,
-        "autostart": true
     },
     "p2p": {
         "bindMultiAddresses": [
@@ -142,7 +134,7 @@
             "entryNodes": ["/dns/node-autopeering/udp/14626/autopeering/14bPxgiL7ALdQd9Qmb3z4uwCsX4M7PGPeouNaVPx45ax"],
             "entryNodesPreferIPv6": false,
             "runAsEntryNode": false
-        }
+          }
     },
     "p2pdisc": {
         "advertiseInterval": "30s",
@@ -151,11 +143,14 @@
         "routingTableRefreshPeriod": "60s"
     },
     "logger": {
-        "level": "error",
+        "level": "info",
         "disableCaller": true,
         "encoding": "console",
         "outputPaths": [
             "stdout"
         ]
+    },
+    "mqtt": {
+        "bindAddress": "0.0.0.0:1883"
     }
 }

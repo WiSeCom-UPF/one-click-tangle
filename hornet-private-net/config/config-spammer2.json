@@ -38,6 +38,7 @@
         }
     },
     "dashboard": {
+        "bindAddress": "0.0.0.0:8081",
         "auth": {
             "sessionTimeout": "72h",
             "username": "admin",
@@ -54,7 +55,7 @@
         "depth": 50,
         "interval": 200,
         "fullPath": "snapshots/private-tangle/full_snapshot.bin",
-        "deltaPath": "snapshots/private-tangle/delta_snapshot_coo.bin",
+        "deltaPath": "snapshots/private-tangle/delta_snapshot_spammer.bin",
         "deltaSizeThresholdPercentage": 50.0
     },
     "protocol": {
@@ -82,8 +83,8 @@
     },
     "tipsel": {
         "maxDeltaMsgYoungestConeRootIndexToCMI": 8,
-        "maxDeltaMsgOldestConeRootIndexToCMI": 10,
-        "belowMaxDepth": 10,
+        "maxDeltaMsgOldestConeRootIndexToCMI": 13,
+        "belowMaxDepth": 15,
         "nonLazy": {
             "retentionRulesTipsLimit": 100,
             "maxReferencedTipAge": "3s",
@@ -98,40 +99,31 @@
         }
     },
     "node": {
-        "alias": "coo",
+        "alias": "spammer2",
         "profile": "auto",
         "disablePlugins": [
             "WarpSync",
-            "Spammer",
-            "Autopeering",
-            "ZMQ",
-            "MQTT",
+            "Coordinator",
+            "Profiling",
             "Prometheus",
-            "Profiling"
+            "MQTT",
+            "ZMQ"
         ],
         "enablePlugins": [
-            "Coordinator",
+            "Spammer",
+            "URTS",
             "RestAPI",
-            "URTS"
+            "Autopeering"
         ]
     },
-    "coordinator": {
-        "stateFilePath": "./coo-state/coordinator.state",
-        "interval": "6s",
-        "checkpoints": {
-            "maxTrackedMessages": 10000
-        },
-        "tipsel": {
-            "minHeaviestBranchUnreferencedMessagesThreshold": 20,
-            "maxHeaviestBranchTipsPerCheckpoint": 10,
-            "randomTipsPerCheckpoint": 2,
-            "heaviestBranchSelectionTimeout": "100ms"
-        },
-        "quorum": {
-            "enabled": false,
-            "groups": {},
-            "timeout": "2s"
-        }
+    "spammer": {
+        "message": "one-click-tangle.",
+        "index": "HORNET Spammer",
+        "indexSemiLazy": "HORNET Spammer Semi-Lazy",
+        "cpuMaxUsage": 0.8,
+        "mpsRateLimit": 5.0,
+        "workers": 0,
+        "autostart": true
     },
     "p2p": {
         "bindMultiAddresses": [
@@ -145,7 +137,13 @@
         "db": {
             "path": "p2pstore"
         },
-        "reconnectInterval": "30s"
+        "reconnectInterval": "30s",
+        "autopeering": {
+            "bindAddress": "0.0.0.0:14626",
+            "entryNodes": ["/dns/node-autopeering/udp/14626/autopeering/15oDBJeqNPd6U1wxtss8M2v7VC64qDiwPnUziwAjUF3"],
+            "entryNodesPreferIPv6": false,
+            "runAsEntryNode": false
+        }
     },
     "p2pdisc": {
         "advertiseInterval": "30s",
@@ -154,7 +152,7 @@
         "routingTableRefreshPeriod": "60s"
     },
     "logger": {
-        "level": "info",
+        "level": "error",
         "disableCaller": true,
         "encoding": "console",
         "outputPaths": [

@@ -65,7 +65,7 @@
         "milestonePublicKeyCount": 1,
         "publicKeyRanges": [
             {
-                "key": "678db435e9ee1f122dae939e8cf07c7657a93aeac395220fdf6e1c38db9b0d06",
+                "key": "a2610e7bfdee2719ede8cf77fdfc41610b31d7cdda226c3109cee7ee25fdc1ed",
                 "start": 0,
                 "end": 0
             }
@@ -82,9 +82,9 @@
         "milestoneTimeout": "120s"
     },
     "tipsel": {
-        "maxDeltaMsgYoungestConeRootIndexToCMI": 8,
-        "maxDeltaMsgOldestConeRootIndexToCMI": 13,
-        "belowMaxDepth": 15,
+        "maxDeltaMsgYoungestConeRootIndexToCMI": 10,
+        "maxDeltaMsgOldestConeRootIndexToCMI": 10,
+        "belowMaxDepth": 10,
         "nonLazy": {
             "retentionRulesTipsLimit": 100,
             "maxReferencedTipAge": "3s",

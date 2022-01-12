@@ -1,0 +1,12 @@
+  {
+    "peers": [
+      {
+        "alias": "spammer2",
+        "multiAddress": "/dns/spammer2/tcp/15600/p2p/12D3KooWM5JRNWNunrbmFCF6UrATL34zTdbi9qr2Pd9DU7y8rBek"
+      },
+      {
+        "alias": "node1",
+        "multiAddress": "/dns/node1/tcp/15600/p2p/12D3KooWFHSVpoYQvCzg56mq38znJ1pCb5S5BFeyX7f6ygwdeq13"
+      }
+    ]
+  } 

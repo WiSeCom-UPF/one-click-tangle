@@ -1,0 +1,8 @@
+  {
+    "peers": [
+      {
+        "alias": "node2",
+        "multiAddress": "/dns/node2/tcp/15600/p2p/12D3KooWHZArRGRggVeKFt78jTecSSda3fnnJaXmmBd4jYksx1wx"
+      }
+    ]
+  } 

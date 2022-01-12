@@ -5,12 +5,22 @@ networks:
     external:
       name: private-tangle
 
+  tangle1:
+    driver: overlay
+      # name: offline_tangle
+
+  tangle2:
+    driver: overlay
+      # name: offline_tangle
+
+
 services:
   coo:
     hostname: coo
     # network_mode: host
     networks:
-      - tangle
+      # - tangle
+      - tangle1
     image: gohornet/hornet:1.0.5
     restart: unless-stopped
     container_name: coo
@@ -29,11 +39,12 @@ services:
     cap_drop:
       - ALL
   
-  node:
+  node1:
     hostname: node1
     # network_mode: host
     networks:
       - tangle
+      - tangle1
     image: gohornet/hornet:1.0.5
     restart: unless-stopped
     container_name: node1
@@ -48,32 +59,90 @@ services:
       - "0.0.0.0:8081:8081"
       - "0.0.0.0:15600:15600"
     volumes:
-      - ./config/config-node.json:/app/config.json:ro
+      - ./config/config-node1.json:/app/config.json:ro
       - ./config/profiles.json:/app/profiles.json
-      - ./config/peering-node.json:/app/peering.json
+      - ./config/peering-node1.json:/app/peering.json
       - ./db/private-tangle/node1.db:/app/db
       - ./p2pstore/node1:/app/p2pstore
       - ./snapshots:/app/snapshots
     cap_drop:
         - ALL
-  
-  spammer:
-    hostname: spammer
+
+  node2:
+    hostname: node2
     # network_mode: host
     networks:
       - tangle
+      - tangle2
     image: gohornet/hornet:1.0.5
     restart: unless-stopped
-    container_name: spammer
+    container_name: node2
     expose:
+      - 14265
+      - 8081
+      - 1883
       - 15600
       - "14626/udp"
+    ports:
+      # - "0.0.0.0:14265:14265"
+      - "0.0.0.0:8085:8081"
+      # - "0.0.0.0:15600:15600"
     volumes:
-      - ./config/config-spammer.json:/app/config.json:ro
+      - ./config/config-node2.json:/app/config.json:ro
       - ./config/profiles.json:/app/profiles.json
-      - ./config/peering-spammer.json:/app/peering.json
-      - ./db/private-tangle/spammer.db:/app/db
-      - ./p2pstore/spammer:/app/p2pstore
+      - ./config/peering-node2.json:/app/peering.json
+      - ./db/private-tangle/node2.db:/app/db
+      - ./p2pstore/node2:/app/p2pstore
+      - ./snapshots:/app/snapshots
+    cap_drop:
+        - ALL
+  
+  spammer1:
+    hostname: spammer1
+    # network_mode: host
+    networks:
+      # - tangle
+      - tangle1
+    image: gohornet/hornet:1.0.5
+    restart: unless-stopped
+    container_name: spammer1
+    expose:
+      - 15600
+      - 8081
+      - "14626/udp"
+    ports:
+      - "0.0.0.0:8083:8081"
+    volumes:
+      - ./config/config-spammer1.json:/app/config.json:ro
+      - ./config/profiles.json:/app/profiles.json
+      - ./config/peering-spammer1.json:/app/peering.json
+      - ./db/private-tangle/spammer1.db:/app/db
+      - ./p2pstore/spammer1:/app/p2pstore
+      - ./snapshots:/app/snapshots
+    cap_drop:
+        - ALL
+
+  spammer2:
+    hostname: spammer2
+    # network_mode: host
+    networks:
+      # - tangle
+      - tangle2
+    image: gohornet/hornet:1.0.5
+    restart: unless-stopped
+    container_name: spammer2
+    expose:
+      - 15600
+      - 8081
+      - "14626/udp"
+    ports:
+      - "0.0.0.0:8084:8081"
+    volumes:
+      - ./config/config-spammer2.json:/app/config.json:ro
+      - ./config/profiles.json:/app/profiles.json
+      - ./config/peering-spammer2.json:/app/peering.json
+      - ./db/private-tangle/spammer2.db:/app/db
+      - ./p2pstore/spammer2:/app/p2pstore
       - ./snapshots:/app/snapshots
     cap_drop:
         - ALL

@@ -5,8 +5,8 @@
         "multiAddress": "/dns/node1/tcp/15600/p2p/12D3KooWFHSVpoYQvCzg56mq38znJ1pCb5S5BFeyX7f6ygwdeq13"
       },
       {
-        "alias": "spammer1",
-        "multiAddress": "/dns/spammer1/tcp/15600/p2p/12D3KooWQFUi4QLWm5diBCp49y1ELdGUr8w6LQ6D86cnQvFU1M5X"
+        "alias": "coo",
+        "multiAddress": "/dns/coo/tcp/15600/p2p/12D3KooWDPDbs9c2aMcquvFhxYDQZVdpJyKFaLFxv8eMmY6znXPL"
       }
     ]
   } 
