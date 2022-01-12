@@ -35,13 +35,13 @@ In the tangle splitting use case, the tangle is virtually split, i.e. a signific
 After the private network is up and running, go to the visualizer inside the IOTA Node2. Now, disconnect the Node1 from **private_tangle** network using the following command:
 
 ```bash
-$ docker network disconnect private_tangle Node1
+$ docker network disconnect private_tangle node1
 ```
 
 and after 60 seconds, run the following command:
 
 ```bash
-$ docker network connect private_tangle Node1
+$ docker network connect private_tangle node1
 ```
 
 Now after a few seconds, you will see a split in the tangle as shown in the following picture:
@@ -57,7 +57,7 @@ Follow the steps mentioned in the previous scenario, expect this, time just run 
 
 
 ```bash
-$ docker network connect private_tangle Node1
+$ docker network connect private_tangle node1
 ```
 
 
